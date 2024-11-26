@@ -19,7 +19,7 @@ A powerful terminal-based search tool that allows you to search and browse web c
 ## 📦 Installation
 
 ```bash
-cargo install sterm
+cargo install search-in-terminal
 ```
 
 ## 🚀 Usage
