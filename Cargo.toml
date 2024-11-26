@@ -1,6 +1,6 @@
 [package]
 name = "search-in-terminal"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["zykowal"]
 description = "A terminal-based search tool"
@@ -31,3 +31,4 @@ rand = "0.8"
 thiserror = "2.0"
 moka = { version = "0.12", features = ["future"] }
 toml = "0.8"
+dirs = "5.0"

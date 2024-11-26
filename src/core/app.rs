@@ -5,36 +5,64 @@ use ratatui::widgets::ListState;
 
 use crate::{
     search::{
-        engine::{Google, SearchEngine},
+        engine::SearchEngine,
         models::{ITEMS_PER_PAGE, RATE_LIMIT_DURATION},
     },
-    SearchResult,
+    SearchResult, CONFIG,
 };
 
-/// 应用程序状态结构体
+/// Application state structure
 #[derive(Debug)]
 pub struct App {
-    pub input: String,                     // 用户输入的搜索词
-    pub search_results: Vec<SearchResult>, // 搜索结果列表
-    pub selected_index: usize,             // 当前选中的结果索引
-    pub input_mode: bool,                  // 是否处于输入模式
-    pub error_message: Option<String>,     // 错误信息
-    pub warning_message: Option<String>,   // 警告信息
-    pub scroll_offset: usize,              // 滚动偏移量
-    pub page: usize,                       // 当前页码
-    pub total_pages: usize,                // 总页数
-    pub last_search: Option<Instant>,      // 上次搜索时间
-    pub is_loading: bool,                  // 是否正在加载
-    pub search_engine: SearchEngine,       // 当前选择的搜索引擎
-    pub list_state: ListState,             // 列表状态
-    pub start: u16,                        // 搜索起始位置
+    /// User search query input
+    pub input: String,
+    
+    /// List of search results
+    pub search_results: Vec<SearchResult>,
+    
+    /// Currently selected result index
+    pub selected_index: usize,
+    
+    /// Whether in input mode
+    pub input_mode: bool,
+    
+    /// Error message
+    pub error_message: Option<String>,
+    
+    /// Warning message
+    pub warning_message: Option<String>,
+    
+    /// Current scroll position in the results list
+    pub scroll_offset: usize,
+    
+    /// Current page number (0-based)
+    pub page: usize,
+    
+    /// Total number of available pages
+    pub total_pages: usize,
+    
+    /// Timestamp of the last search operation
+    pub last_search: Option<Instant>,
+    
+    /// Flag indicating whether a search is in progress
+    pub is_loading: bool,
+    
+    /// Current search engine being used
+    pub search_engine: SearchEngine,
+    
+    /// State of the results list selection
+    pub list_state: ListState,
+    
+    /// Starting index for pagination
+    pub start: u16,
 }
 
 impl App {
-    /// 创建新的应用程序实例
+    /// Creates a new application instance with default settings
     pub fn new() -> Self {
         let mut list_state = ListState::default();
         list_state.select(Some(0));
+
         Self {
             input: String::new(),
             search_results: Vec::new(),
@@ -47,13 +75,13 @@ impl App {
             total_pages: 0,
             last_search: None,
             is_loading: false,
-            search_engine: SearchEngine::Google(Google),
+            search_engine: SearchEngine::favor(&CONFIG.engine.favor),
             list_state,
             start: 0,
         }
     }
 
-    /// 设置搜索结果的总页数
+    /// Sets the total number of pages for search results
     pub fn total_pages(&mut self) {
         if self.search_results.is_empty() {
             self.total_pages = 1;
@@ -62,7 +90,7 @@ impl App {
         }
     }
 
-    /// 获取当前页的结果范围
+    /// Gets the range of results for the current page
     pub fn current_page_range(&self) -> (usize, usize) {
         if self.search_results.is_empty() {
             return (0, 0);
@@ -77,7 +105,7 @@ impl App {
         (start_index, end_index)
     }
 
-    /// 切换页面
+    /// Switches to the next or previous page
     pub async fn change_page(&mut self, direction: i32) -> Result<()> {
         if self.search_results.is_empty() {
             return Ok(());
@@ -91,7 +119,7 @@ impl App {
                 self.scroll_offset = 0;
                 self.list_state.select(Some(0));
             } else if new_page >= 0 && direction > 0 {
-                // 如果尝试前进到下一页但已经是最后一页，则尝试获取更多结果
+                // If attempting to go to the next page but already on the last page, try to get more results
                 self.next_search().await?;
                 if self.page < self.total_pages - 1 {
                     self.page += 1;
@@ -106,12 +134,12 @@ impl App {
         Ok(())
     }
 
-    /// 清空输入
+    /// Clears the input field
     pub fn clear_input(&mut self) {
         self.input.clear();
     }
 
-    /// 清空搜索结果
+    /// Clears the search results
     pub fn clear_results(&mut self) {
         self.search_results.clear();
         self.selected_index = 0;
@@ -134,10 +162,10 @@ impl App {
         self.error_message = None;
         self.warning_message = None;
 
-        // 更新起始位置
+        // Update the start position
         self.start = self.start.saturating_add(10);
 
-        // 根据选择的搜索引擎执行搜索
+        // Perform the search using the selected search engine
         let results = match self.search_engine.search(&self.input, self.start).await {
             Ok(results) => Ok(results),
             Err(e) => {
@@ -148,11 +176,11 @@ impl App {
 
         match results {
             Ok(mut results) => {
-                // 检查是否有重复的结果
+                // Check for duplicate results
                 let existing_urls: std::collections::HashSet<_> =
                     self.search_results.iter().map(|r| &r.url).collect();
 
-                // 只添加不重复的结果
+                // Only add non-duplicate results
                 results.retain(|result| !existing_urls.contains(&result.url));
 
                 if !results.is_empty() {
@@ -170,13 +198,13 @@ impl App {
         Ok(())
     }
 
-    /// 执行搜索操作
+    /// Performs a search operation
     pub async fn perform_search(&mut self) -> Result<()> {
         if self.input.is_empty() {
             return Ok(());
         }
 
-        // 检查搜索频率限制
+        // Check the search rate limit
         if let Some(last_search) = self.last_search {
             if last_search.elapsed() < RATE_LIMIT_DURATION {
                 self.warning_message =
@@ -188,9 +216,9 @@ impl App {
         self.is_loading = true;
         self.error_message = None;
         self.warning_message = None;
-        self.start = 0; // 重置起始位置
+        self.start = 0; // Reset the start position
 
-        // 根据选择的搜索引擎执行搜索
+        // Perform the search using the selected search engine
         let results = match self.search_engine.search(&self.input, self.start).await {
             Ok(results) => Ok(results),
             Err(e) => {
@@ -220,7 +248,7 @@ impl App {
         Ok(())
     }
 
-    /// 打开选中的URL
+    /// Opens the selected URL
     pub fn open_selected_url(&mut self) -> Result<()> {
         let (start_index, _) = self.current_page_range();
         if let Some(selected) = self.list_state.selected() {

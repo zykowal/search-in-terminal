@@ -8,7 +8,7 @@ use moka::future::Cache;
 
 use crate::{SearchError, SearchResult, CONFIG};
 
-/// 搜索引擎枚举
+/// Search Engine Enum
 #[derive(Debug, Clone, Copy)]
 pub enum SearchEngine {
     Google(Google),
@@ -17,6 +17,16 @@ pub enum SearchEngine {
 }
 
 impl SearchEngine {
+    pub fn favor(engine_name: &str) -> Self {
+        match engine_name.to_lowercase().as_str() {
+            "google" => SearchEngine::Google(Google),
+            "bing" => SearchEngine::Bing(Bing),
+            "duckduckgo" => SearchEngine::DuckDuckGo(DuckDuckGo),
+            _ => SearchEngine::Google(Google),
+        }
+    }
+
+    /// Get the next search engine in the sequence
     pub fn next(&self) -> Self {
         match self {
             SearchEngine::Google(_) => SearchEngine::Bing(Bing),
@@ -25,6 +35,7 @@ impl SearchEngine {
         }
     }
 
+    /// Get the name of the search engine as a string
     pub fn as_str(&self) -> &'static str {
         match self {
             SearchEngine::Google(google) => google.name(),
@@ -33,6 +44,7 @@ impl SearchEngine {
         }
     }
 
+    /// Perform a search using the current search engine
     pub async fn search(&self, query: &str, start: u16) -> Result<Vec<SearchResult>> {
         match self {
             SearchEngine::Google(google) => google.search(query, start).await,
@@ -42,21 +54,27 @@ impl SearchEngine {
     }
 }
 
+/// Trait for search engines
 pub trait Engine {
+    /// Get the name of the search engine
     fn name(&self) -> &'static str;
+    /// Build the URL for a search query
     fn build_url(&self, query: &str, start: u16) -> String;
+    /// Perform a search
     fn search(&self, query: &str, start: u16) -> impl std::future::Future<Output = Result<Vec<SearchResult>>>;
 }
 
-/// Google
+/// Google search engine
 #[derive(Debug, Clone, Copy)]
 pub struct Google;
 
 impl Engine for Google {
+    /// Get the name of the search engine
     fn name(&self) -> &'static str {
         "Google"
     }
 
+    /// Build the URL for a search query
     fn build_url(&self, query: &str, start: u16) -> String {
         format!(
             "https://www.google.com/search?q={}&num=10&start={}",
@@ -65,6 +83,7 @@ impl Engine for Google {
         )
     }
 
+    /// Perform a search
     async fn search(&self, query: &str, start: u16) -> Result<Vec<SearchResult>> {
         let url = self.build_url(query, start);
         let text = fetch_response_text(&url).await?;
@@ -113,15 +132,17 @@ impl Engine for Google {
     }
 }
 
-// g
+/// Bing search engine
 #[derive(Debug, Clone, Copy)]
 pub struct Bing;
 
 impl Engine for Bing {
+    /// Get the name of the search engine
     fn name(&self) -> &'static str {
         "Bing"
     }
 
+    /// Build the URL for a search query
     fn build_url(&self, query: &str, start: u16) -> String {
         format!(
             "https://www.bing.com/search?q={}&count=10&first={}",
@@ -130,6 +151,7 @@ impl Engine for Bing {
         )
     }
 
+    /// Perform a search
     async fn search(&self, query: &str, start: u16) -> Result<Vec<SearchResult>> {
         let url = self.build_url(query, start);
         let text = fetch_response_text(&url).await?;
@@ -178,15 +200,17 @@ impl Engine for Bing {
     }
 }
 
-// DuckDuckGo
+/// DuckDuckGo search engine
 #[derive(Debug, Clone, Copy)]
 pub struct DuckDuckGo;
 
 impl Engine for DuckDuckGo {
+    /// Get the name of the search engine
     fn name(&self) -> &'static str {
         "DuckDuckGo"
     }
 
+    /// Build the URL for a search query
     fn build_url(&self, query: &str, start: u16) -> String {
         format!(
             "https://html.duckduckgo.com/html/?q={}&s={}",
@@ -195,6 +219,7 @@ impl Engine for DuckDuckGo {
         )
     }
 
+    /// Perform a search
     async fn search(&self, query: &str, start: u16) -> Result<Vec<SearchResult>> {
         let url = self.build_url(query, start);
         let text = fetch_response_text(&url).await?;
@@ -205,6 +230,8 @@ impl Engine for DuckDuckGo {
         let snippet_selector = scraper::Selector::parse(".result__snippet").unwrap();
 
         let mut results = Vec::new();
+        let mut seen_urls = std::collections::HashSet::new();
+
         for result in document.select(&result_selector) {
             if let (Some(title_elem), Some(snippet_elem)) = (
                 result.select(&title_selector).next(),
@@ -232,6 +259,11 @@ impl Engine for DuckDuckGo {
                         continue;
                     };
 
+                    // Skip if we've already seen this URL
+                    if !seen_urls.insert(clean_url.clone()) {
+                        continue;
+                    }
+
                     results.push(SearchResult {
                         title: title.trim().to_string(),
                         url: clean_url,
@@ -251,48 +283,49 @@ impl Engine for DuckDuckGo {
 
 static RESPONSE_CACHE: Lazy<Cache<String, String>> = Lazy::new(|| {
     Cache::builder()
-        .max_capacity(CONFIG.cache_config.max_capacity)
-        .time_to_live(Duration::from_secs(CONFIG.cache_config.time_to_live)) // 10分钟过期
+        .max_capacity(CONFIG.cache.max_capacity)
+        .time_to_live(Duration::from_secs(CONFIG.cache.time_to_live)) // 10 minutes expiration
         .build()
 });
 
+/// Fetch the response text from a URL
 async fn fetch_response_text(url: &str) -> Result<String> {
-    // 首先尝试从缓存中获取响应
+    // First, try to get the response from the cache
     if let Some(cached_response) = RESPONSE_CACHE.get(url).await {
         return Ok(cached_response);
     }
 
     let mut rng = thread_rng();
 
-    // 随机选择一个User-Agent
-    let user_agent = CONFIG.search_config.user_agents.choose(&mut rng).unwrap_or(&CONFIG.search_config.user_agents[0]);
+    // Randomly select a User-Agent
+    let user_agent = CONFIG.search.user_agents.choose(&mut rng).unwrap_or(&CONFIG.search.user_agents[0]);
 
-    // 添加随机延迟
-    let jitter = rng.gen_range(0..CONFIG.search_config.max_jitter);
-    sleep(Duration::from_millis(CONFIG.search_config.base_delay + jitter)).await;
+    // Add a random delay
+    let jitter = rng.gen_range(0..CONFIG.search.max_jitter);
+    sleep(Duration::from_millis(CONFIG.search.base_delay + jitter)).await;
 
     let client = reqwest::Client::builder()
         .user_agent(user_agent.to_string())
         .cookie_store(true)
-        .timeout(Duration::from_secs(CONFIG.search_config.request_timeout))
+        .timeout(Duration::from_secs(CONFIG.search.request_timeout))
         .build()
         .map_err(|e| SearchError::Other(format!("Failed to build client: {}", e)))?;
 
     let mut last_error = None;
 
-    // 重试机制
-    for retry in 0..CONFIG.search_config.max_retries {
+    // Retry mechanism
+    for retry in 0..CONFIG.search.max_retries {
         if retry > 0 {
-            // 如果是重试，增加延迟时间
+            // If it's a retry, increase the delay time
             sleep(Duration::from_millis(
-                (CONFIG.search_config.base_delay * (retry as u64)) + jitter,
+                (CONFIG.search.base_delay * (retry as u64)) + jitter,
             ))
             .await;
         }
 
-        // 使用timeout包装整个请求过程
+        // Use the timeout package to wrap the entire request process
         match timeout(
-            Duration::from_secs(CONFIG.search_config.request_timeout),
+            Duration::from_secs(CONFIG.search.request_timeout),
             async {
                 match client
                     .get(url)
@@ -310,9 +343,9 @@ async fn fetch_response_text(url: &str) -> Result<String> {
                         
                         match status.as_u16() {
                             200 => {
-                                // 使用timeout包装响应体读取
+                                // Use the timeout package to wrap the response body reading
                                 match timeout(
-                                    Duration::from_secs(CONFIG.search_config.response_timeout),
+                                    Duration::from_secs(CONFIG.search.response_timeout),
                                     response.text()
                                 ).await {
                                     Ok(Ok(text)) => {
@@ -355,7 +388,7 @@ async fn fetch_response_text(url: &str) -> Result<String> {
             }
         ).await {
             Ok(Ok(text)) => {
-                // 将响应存入缓存
+                // Store the response in the cache
                 RESPONSE_CACHE.insert(url.to_string(), text.clone()).await;
                 return Ok(text);
             }

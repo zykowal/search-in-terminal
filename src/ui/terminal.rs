@@ -8,36 +8,36 @@ use std::io;
 
 use crate::{search::models::POLL_TIMEOUT, App};
 
-/// 渲染用户界面
+/// Render the user interface
 pub fn ui(frame: &mut Frame, app: &mut App) {
-    // 将 Frame 分割成四个部分：输入框、loading指示器、搜索结果列表和状态栏
-    // 每个部分的高度分别是3行、1行、至少5行和3行
+    // Split the Frame into four sections: input box, loading indicator, search results list, and status bar
+    // Each section has a height of 3 lines, 1 line, at least 5 lines, and 3 lines respectively
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3), // 输入框
-            Constraint::Length(1), // loading指示器
-            Constraint::Min(5),    // 搜索结果列表
-            Constraint::Length(3), // 状态栏
+            Constraint::Length(3), // Input box
+            Constraint::Length(1), // Loading indicator
+            Constraint::Min(5),    // Search results list
+            Constraint::Length(3), // Status bar
         ])
         .split(frame.area());
 
     let input_content = if app.is_loading {
-        // 如果正在搜索，显示一个Loading指示器
+        // If searching, show a loading indicator
         Line::from(vec![
-            Span::raw(&app.input), // 显示当前的输入
+            Span::raw(&app.input), // Show current input
             Span::styled(
-                " [Searching...]",                  // 加一个Loading指示器
-                Style::default().fg(Color::Yellow), // 并且高亮显示
+                " [Searching...]",                  // Add a loading indicator
+                Style::default().fg(Color::Yellow), // And highlight it
             ),
         ])
     } else {
-        // 如果不是正在搜索，显示一个竖线
+        // If not searching, show a vertical line
         Line::from(vec![
-            Span::raw(&app.input), // 显示当前的输入
+            Span::raw(&app.input), // Show current input
             Span::styled(
-                "|",                                // 加一个竖线
-                Style::default().fg(Color::Yellow), // 并且高亮显示
+                "|",                                // Add a vertical line
+                Style::default().fg(Color::Yellow), // And highlight it
             ),
         ])
     };
@@ -110,9 +110,9 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
 
     let results_list = List::new(results)
         .block(Block::default().borders(Borders::ALL).title(format!(
-            "Results (Page {}/{})",
+            "(Page {}/{})",
             app.page + 1,
-            app.total_pages,
+            app.total_pages
         )))
         .highlight_style(
             Style::default()
@@ -145,7 +145,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
     }
 }
 
-/// 运行应用程序
+/// Run the application
 pub async fn run_app(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     app: &mut App,

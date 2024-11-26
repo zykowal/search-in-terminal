@@ -1,63 +1,65 @@
 # Search in Terminal
 
-一个强大的终端搜索工具，让你在终端中直接搜索并浏览网页内容。支持 Google、Bing、DuckDuckGo 等多个搜索引擎，提供优雅的 TUI 界面和便捷的键盘操作。
+English | [简体中文](README.zh-CN.md)
 
-## ✨ 特性
+A powerful terminal-based search tool that allows you to search and browse web content directly in your terminal. Supports multiple search engines (Google, Bing, DuckDuckGo) with an elegant TUI interface and convenient keyboard controls.
 
-- 🔍 支持多个搜索引擎
+## ✨ Features
+
+- 🔍 Multiple Search Engines Support
   - Google
   - Bing
   - DuckDuckGo
-- 🚀 快速切换搜索引擎
-- 💾 搜索结果缓存
-- 🎨 美观的 TUI 界面
-- ⌨️ 便捷的键盘操作
-- 🌐 一键在浏览器中打开搜索结果
+- 🚀 Quick Engine Switching
+- 💾 Search Results Caching
+- 🎨 Beautiful TUI Interface
+- ⌨️ Convenient Keyboard Controls
+- 🌐 One-click Browser Opening
 
-## 📦 安装
+## 📦 Installation
 
 ```bash
-cargo install search-in-terminal
+cargo install sterm
 ```
 
-## 🚀 使用方法
+## 🚀 Usage
 
-直接运行：
+After installation, simply run:
 
 ```bash
 st
 ```
 
-### ⌨️ 快捷键
+### ⌨️ Keyboard Shortcuts
 
-- `Enter`: 执行搜索
-- `Tab`: 切换搜索引擎
-- `↑/↓`: 浏览搜索结果
-- `o`: 在浏览器中打开选中的结果
-- `q`: 退出程序
+- `Enter`: Execute search
+- `Tab`: Switch search engine
+- `↑/↓`: Browse search results
+- `o`: Open selected result in browser
+- `q`: Quit program
 
-## ⚙️ 配置
+## ⚙️ Configuration
 
-配置文件位置：
-- Linux/macOS: `~/.config/search-in-terminal/config.toml`
-- Windows: `%APPDATA%\search-in-terminal\config.toml`
+Configuration file location:
+- Linux/macOS: `~/.config/st/config.toml`
+- Windows: `%APPDATA%\st\config.toml`
 
-## 🛠 开发
+## 🛠 Development
 
-### 环境要求
+### Requirements
 
 - Rust 2021 edition
 - Cargo
 
-### 依赖
+### Dependencies
 
-- ratatui: TUI 界面
-- crossterm: 终端控制
-- tokio: 异步运行时
-- reqwest: HTTP 客户端
-- scraper: HTML 解析
+- ratatui: TUI interface
+- crossterm: Terminal control
+- tokio: Async runtime
+- reqwest: HTTP client
+- scraper: HTML parsing
 
-### 本地构建
+### Local Build
 
 ```bash
 git clone https://github.com/zykowal/search-in-terminal
@@ -65,10 +67,10 @@ cd search-in-terminal
 cargo build --release
 ```
 
-## 📝 许可证
+## 📝 License
 
 MIT License
 
-## 👨‍💻 作者
+## 👨‍💻 Author
 
 zykowal

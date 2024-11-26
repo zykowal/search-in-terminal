@@ -1,16 +1,16 @@
 use std::time::Duration;
 
-// 每页显示的搜索结果数量
+// Number of search results per page
 pub const ITEMS_PER_PAGE: usize = 10;
-// 事件轮询超时时间
+// Event polling timeout duration
 pub const POLL_TIMEOUT: Duration = Duration::from_millis(100);
-// 搜索频率限制时间
+// Search rate limit duration
 pub const RATE_LIMIT_DURATION: Duration = Duration::from_secs(1);
 
-/// 搜索结果结构体
+/// Search result structure
 #[derive(Debug, Clone)]
 pub struct SearchResult {
-    pub title: String,       // 搜索结果标题
-    pub url: String,         // 搜索结果URL
-    pub description: String, // 搜索结果描述
+    pub title: String,       // Search result title
+    pub url: String,         // Search result URL
+    pub description: String, // Search result description
 }

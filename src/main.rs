@@ -1,5 +1,6 @@
-// 终端搜索应用程序
-// 一个基于终端的Google搜索工具，支持实时搜索结果显示和交互式导航
+// Terminal Search Application
+// A terminal-based search tool supporting Google, Bing, and DuckDuckGo
+// with real-time search results display and interactive navigation
 
 use anyhow::Result;
 use search_in_terminal::run;
