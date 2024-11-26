@@ -1,28 +1,69 @@
-# Search in Terminal
+# Search in Terminal 🔍
 
-English | [简体中文](README.zh-CN.md)
+English | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)
+
+[![Crates.io](https://img.shields.io/crates/v/search-in-terminal.svg)](https://crates.io/crates/search-in-terminal)
+[![Downloads](https://img.shields.io/crates/d/search-in-terminal.svg)](https://crates.io/crates/search-in-terminal)
+[![License](https://img.shields.io/crates/l/search-in-terminal.svg)](LICENSE)
+
+## Table of Contents
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Keyboard Shortcuts](#keyboard-shortcuts)
+- [Configuration](#configuration)
+- [Development](#development)
+  - [Requirements](#requirements)
+  - [Build](#build)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [Security](#security)
+- [License](#license)
+- [Author](#author)
 
 A powerful terminal-based search tool that allows you to search and browse web content directly in your terminal. Supports multiple search engines (Google, Bing, DuckDuckGo) with an elegant TUI interface and convenient keyboard controls.
 
-## ✨ Features
+### 🎯 Why Search in Terminal?
 
-- 🔍 Multiple Search Engines Support
+- **Efficiency**: Search without leaving your terminal
+- **Privacy**: Control your user agent and search behavior
+- **Customization**: Configure search engines and behavior to your needs
+- **Speed**: Fast and lightweight, with caching support
+- **Cross-platform**: Works on Linux, macOS, and Windows
+
+## Features ✨
+
+- Multiple Search Engines Support 🌐
   - Google
   - Bing
   - DuckDuckGo
-- 🚀 Quick Engine Switching
-- 💾 Search Results Caching
-- 🎨 Beautiful TUI Interface
-- ⌨️ Convenient Keyboard Controls
-- 🌐 One-click Browser Opening
+- Quick Engine Switching 🔄
+- Search Results Caching 💾
+- Beautiful TUI Interface 🎨
+- Convenient Keyboard Controls ⌨️
+- One-click Browser Opening 🚀
 
-## 📦 Installation
+## Screenshots 📸
+
+_Coming soon_
+
+## Installation 📦
+
+### Via Cargo
 
 ```bash
 cargo install search-in-terminal
 ```
 
-## 🚀 Usage
+### From Source
+
+```bash
+git clone https://github.com/zykowal/search-in-terminal.git
+cd search-in-terminal
+cargo install --path .
+```
+
+## Usage 🛠️
 
 After installation, simply run:
 
@@ -30,47 +71,69 @@ After installation, simply run:
 st
 ```
 
-### ⌨️ Keyboard Shortcuts
+### Keyboard Shortcuts ⌨️
 
-- `Enter`: Execute search
-- `Tab`: Switch search engine
+- `i`: Input mode
+- `<C-u>`: Clear input
+- `Esc`: Exit input mode
+- `Enter`: Execute search when in input mode
+- `e`: Switch search engine
 - `↑/↓`: Browse search results
-- `o`: Open selected result in browser
+- `k/j`: Browse search results
+- `Enter`: Open selected result in browser
 - `q`: Quit program
 
-## ⚙️ Configuration
+## Configuration ⚙️
 
 Configuration file location:
 - Linux/macOS: `~/.config/st/config.toml`
 - Windows: `%APPDATA%\st\config.toml`
 
-## 🛠 Development
+For detailed configuration options, please see:
+- [Configuration Guide](docs/CONFIG.md)
+- [API Documentation](docs/API.md)
+- [CLI Documentation](docs/CLI.md)
+
+## Development 👨‍💻
 
 ### Requirements
 
 - Rust 2021 edition
-- Cargo
 
-### Dependencies
-
-- ratatui: TUI interface
-- crossterm: Terminal control
-- tokio: Async runtime
-- reqwest: HTTP client
-- scraper: HTML parsing
-
-### Local Build
+### Build
 
 ```bash
-git clone https://github.com/zykowal/search-in-terminal
+git clone https://github.com/zykowal/search-in-terminal.git
 cd search-in-terminal
 cargo build --release
 ```
 
-## 📝 License
+## FAQ 💭
+
+### How do I add a custom search engine?
+
+Edit your config file and add a new entry under the `[search.engines]` section. See the [Configuration Guide](docs/CONFIG.md) for details.
+
+### How do I change the default search engine?
+
+Set the `default_engine` option in your config file. See the [Configuration Guide](docs/CONFIG.md) for details.
+
+### Does it work with proxies?
+
+Sorry! Temporarily unsupported. Use system-level proxy settings.
+
+## Contributing 🤝
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## License 📝
 
 MIT License
 
-## 👨‍💻 Author
+## Author 👤
 
 zykowal
+
+## Changelog 📋
+
+See [CHANGELOG.md](CHANGELOG.md) for release details.
