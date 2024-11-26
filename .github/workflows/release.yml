@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: st
+            asset_name: st-linux-amd64
+          - os: windows-latest
+            artifact_name: st.exe
+            asset_name: st-windows-amd64.exe
+          - os: macos-latest
+            artifact_name: st
+            asset_name: st-macos-amd64
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        
+    - name: Build
+      run: cargo build --release
+        
+    - name: Prepare artifacts
+      shell: bash
+      run: |
+        cd target/release
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          7z a ../../${{ matrix.asset_name }}.zip ${{ matrix.artifact_name }}
+        else
+          tar -czf ../../${{ matrix.asset_name }}.tar.gz ${{ matrix.artifact_name }}
+        fi
+        
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.asset_name }}
+        path: target/release/${{ matrix.artifact_name }}
+
+  create_release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+          
+      - uses: actions/download-artifact@v2
+      
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            st-linux-amd64.tar.gz
+            st-windows-amd64.exe.zip
+            st-macos-amd64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
